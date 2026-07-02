@@ -480,7 +480,7 @@
           <span class="pd">A one-page summary of everything you've flagged, grouped by Priority and Needs Improvement, with each item's location on the map. Prints on standard letter paper.</span>
         </span>
       </button>
-      <div class="pnote">In the print dialog, choose "Save as PDF." For the single-sheet poster, use Chrome or Edge and keep paper size set to the default so the custom poster dimensions are used; other browsers may split it across pages. Flags are stored in this browser, so print from the same device where you marked them.</div>
+      <div class="pnote">In the print dialog, choose "Save as PDF." For the single-sheet poster, use Chrome or Edge and keep paper size set to the default so the custom poster dimensions are used; other browsers may split it across pages. If the map is embedded in another website, the print view opens in a new tab — your flags come with it. Flags are stored in this browser, so print from the same device where you marked them.</div>
     </div>
   </div>
 </div>
@@ -866,7 +866,33 @@
   }
 
   function cleanupPrint(){ printRoot.innerHTML=""; if(pageStyle&&pageStyle.parentNode) pageStyle.parentNode.removeChild(pageStyle); pageStyle=null; }
+
+  /* Google Sites (and other hosts) embed the map in a sandboxed iframe that blocks the
+     print dialog. When embedded, open the map in its own tab with the user's flags carried
+     in the URL, and auto-open the print dialog there instead. */
+  function isEmbedded(){ try{ return window.self!==window.top; }catch(e){ return true; } }
+  function tagsToParam(){ var parts=[],k; for(k in tags){ if(tags.hasOwnProperty(k)) parts.push(k+":"+(tags[k]==="priority"?"p":"n")); } return parts.join(","); }
+  function mergeTagsFromParam(str){
+    if(!str) return;
+    str.split(",").forEach(function(pair){
+      var i=pair.lastIndexOf(":"); if(i<1) return;
+      var id=pair.slice(0,i), t=pair.slice(i+1);
+      if(t==="p") tags[id]="priority"; else if(t==="n") tags[id]="needs";
+    });
+  }
+  function openPrintTab(kind){
+    var u=location.href.split("#")[0]+"#autoprint="+kind+"&flags="+encodeURIComponent(tagsToParam());
+    var w=window.open(u,"_blank");
+    if(!w){
+      var note=printOv.querySelector(".pnote");
+      if(note) note.textContent="Your browser blocked the print tab. Please allow pop-ups for this site, then try again.";
+      return false;
+    }
+    return true;
+  }
+
   function doPrint(kind){
+    if(isEmbedded()){ if(openPrintTab(kind)) closePrintMenu(); return; }
     cleanupPrint();
     var css;
     if(kind==="poster"){
@@ -899,7 +925,19 @@
   document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ if(printOv && !printOv.hidden){ closePrintMenu(); return; } if(flagsOv && !flagsOv.hidden){ closeFlags(); return; } if(aboutEl && !aboutEl.hidden){ closeAbout(); return; } zoomOut(); } });
   var rT; window.addEventListener("resize", function(){ clearTimeout(rT); rT=setTimeout(function(){ if(state.animating||!state.scene) return; var f=buildScene(state.path); stage.replaceChild(f,state.scene); drawLinks(f); scrollToFocus(f); state.scene=f; applyFilter(); }, 140); });
 
+  /* arriving from an embedded page's print request? */
+  var autoprintKind=null;
+  (function(){
+    var m=/[#&]autoprint=(poster|report)/.exec(location.hash||"");
+    if(!m) return;
+    autoprintKind=m[1];
+    var fm=/[#&]flags=([^&]*)/.exec(location.hash||"");
+    if(fm && fm[1]){ try{ mergeTagsFromParam(decodeURIComponent(fm[1])); }catch(e){} }
+    try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
+  })();
+
   mountFirst();
+  if(autoprintKind){ setTimeout(function(){ doPrint(autoprintKind); }, 450); }
   updateFlagsBadge();
 })();
 </script>
