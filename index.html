@@ -80,10 +80,33 @@
 
   /* Stage */
   #edmap .stage{position:relative; flex:1 1 auto; overflow:hidden; background:var(--paper); cursor:default}
-  #edmap .scene{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(40px,7vh,84px); padding:36px 28px; transform-origin:0 0; will-change:transform,opacity}
+  #edmap .scene{position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; display:flex; transform-origin:0 0; will-change:transform,opacity}
+  #edmap .scene::-webkit-scrollbar{width:8px}
+  #edmap .scene::-webkit-scrollbar-thumb{background:#D5D8DC; border-radius:8px}
+  #edmap .scol{position:relative; margin:auto; display:flex; flex-direction:column; align-items:center; gap:clamp(34px,6vh,64px); padding:32px 28px; min-width:0; max-width:100%}
+  #edmap .spine{display:flex; flex-direction:column; align-items:center; gap:22px; max-width:100%}
   #edmap .scene.anim{transition:transform var(--dur) var(--ease), opacity calc(var(--dur) * .9) ease}
   #edmap .links{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible}
   #edmap .links path{fill:none; stroke:var(--line); stroke-width:1.5; stroke-linecap:butt; stroke-linejoin:miter}
+
+  /* Ancestor pathway boxes */
+  #edmap .anc{position:relative; z-index:2; width:min(400px,86vw); padding:9px 40px 9px 14px; border-radius:8px; text-align:left; font:inherit; border:0; cursor:pointer; box-shadow:0 1px 2px rgba(26,28,30,.08); transition:transform .14s ease, box-shadow .14s ease, filter .14s ease}
+  #edmap .anc .eyebrow{display:block; font-size:9px; font-weight:750; letter-spacing:.13em; text-transform:uppercase; opacity:.78; margin-bottom:1px}
+  #edmap .anc .nt{display:block; font-size:13.5px; font-weight:750; letter-spacing:-.01em; line-height:1.2}
+  #edmap .anc .up{position:absolute; right:11px; top:50%; transform:translateY(-50%); width:15px; height:15px; opacity:.55; transition:.14s}
+  #edmap .anc:hover{transform:translateY(-1px); box-shadow:0 2px 5px rgba(26,28,30,.12)}
+  #edmap .anc:hover .up{opacity:1; transform:translateY(-50%) translateY(-1px)}
+  #edmap .anc.k-apex{background:var(--apex); color:#fff}
+  #edmap .anc.k-pillar,#edmap .anc.k-area{background:var(--perf); color:#fff}
+  #edmap .anc.k-pillar:hover,#edmap .anc.k-area:hover{background:var(--perf-dk)}
+  #edmap .anc.k-category,#edmap .anc.k-driver{background:var(--enab); color:var(--enab-d); border:1px solid var(--enab-b)}
+  #edmap .anc .tag{top:50%; right:32px; transform:translateY(-50%); width:16px; height:16px}
+  #edmap .anc .tag:hover{transform:translateY(-50%) scale(1.12)}
+  #edmap .anc .tag .dot{width:6px; height:6px}
+  #edmap .anc.k-apex .tag,#edmap .anc.k-pillar .tag,#edmap .anc.k-area .tag{background:rgba(255,255,255,.16); border-color:rgba(255,255,255,.6); color:#fff}
+  #edmap .anc.k-category .tag,#edmap .anc.k-driver .tag{background:rgba(11,74,82,.06); border-color:rgba(11,74,82,.45); color:var(--enab-d)}
+  #edmap .anc .tagbadge{top:-8px; left:11px; font-size:8.5px}
+  #edmap .anc:focus-visible{outline:3px solid var(--brand-blue); outline-offset:2px}
 
   /* Node boxes */
   #edmap .node{position:relative; z-index:2; border-radius:9px; text-align:left; font:inherit; color:#fff; border:0; cursor:pointer; box-shadow:0 1px 2px rgba(26,28,30,.10); transition:transform .16s ease, box-shadow .16s ease}
@@ -221,6 +244,106 @@
     #edmap .apanel{padding:20px 18px 16px}
   }
   @media (prefers-reduced-motion:reduce){ #edmap .scene.anim{transition:none} #edmap .node{transition:none} }
+
+  /* Print menu options */
+  #edmap .popt{display:flex; align-items:flex-start; gap:13px; width:100%; text-align:left; border:1px solid var(--hair); border-radius:9px; background:#fff; padding:14px 15px; margin-bottom:10px; cursor:pointer; font:inherit; transition:.14s}
+  #edmap .popt:hover{border-color:#C3C7CC; transform:translateY(-1px); box-shadow:0 3px 8px rgba(26,28,30,.08)}
+  #edmap .popt .pico{flex:0 0 auto; width:38px; height:38px; border-radius:8px; display:grid; place-items:center; color:#fff}
+  #edmap .popt .pico svg{width:19px; height:19px}
+  #edmap .popt .pbody{flex:1 1 auto}
+  #edmap .popt .pt{display:block; font-size:14px; font-weight:750; color:var(--ink)}
+  #edmap .popt .pd{display:block; font-size:12px; color:var(--muted); line-height:1.45; margin-top:2px}
+  #edmap .pnote{font-size:11px; color:var(--muted); line-height:1.5; border-top:1px solid var(--hair); padding-top:11px; margin-top:4px}
+
+  /* ================= PRINT RENDERINGS ================= */
+  #printRoot{display:none; font-family:var(--font, ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif); color:#1A1C1E; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  @media print{
+    html, body{height:auto !important; overflow:visible !important; background:#fff !important; margin:0 !important}
+    #edmap{display:none !important}
+    #printRoot{display:block}
+  }
+
+  /* --- shared tree connectors: right angles only --- */
+  #printRoot .tk{display:flex; justify-content:center; align-items:flex-start}
+  #printRoot .tc{padding:16px 7px 0; position:relative}
+  #printRoot .tc::before{content:""; position:absolute; top:0; left:0; right:0; height:1.5px; background:#3F4448}
+  #printRoot .tc::after{content:""; position:absolute; top:0; left:50%; width:1.5px; height:16px; background:#3F4448; margin-left:-0.75px}
+  #printRoot .tc:first-child::before{left:50%}
+  #printRoot .tc:last-child::before{right:50%}
+  #printRoot .tc:only-child::before{display:none}
+  #printRoot .pnode{display:flex; flex-direction:column; align-items:center}
+  #printRoot .pbox{position:relative; text-align:center; border-radius:6px}
+  #printRoot .pbox.haskids::after{content:""; position:absolute; left:50%; top:100%; width:1.5px; height:16px; background:#3F4448; margin-left:-0.75px}
+
+  /* --- poster --- */
+  #printRoot .poster{padding:44px 48px; background:#fff; width:max-content}
+  #printRoot .phead{display:flex; align-items:flex-start; gap:34px; margin-bottom:30px}
+  #printRoot .pintro{width:430px; border:2px solid #1A1C1E; border-radius:4px; padding:16px 18px; flex:0 0 auto}
+  #printRoot .pintro h1{font-size:15px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; color:#FF6600; margin-bottom:9px}
+  #printRoot .pintro h1 sup{font-size:8px; letter-spacing:0}
+  #printRoot .pintro p{font-size:9.5px; line-height:1.5; margin-bottom:7px}
+  #printRoot .pintro p:last-child{margin-bottom:0}
+  #printRoot .papex{flex:1 1 auto; display:flex; align-items:center; justify-content:center}
+  #printRoot .pquestions{width:520px; flex:0 0 auto}
+  #printRoot .pquestions .qh{font-size:13px; font-weight:800; letter-spacing:.11em; text-transform:uppercase; color:#FF6600}
+  #printRoot .pquestions .qs{font-size:9px; color:#5F6469; margin:1px 0 9px}
+  #printRoot .pq{display:flex; gap:8px; margin-bottom:8px}
+  #printRoot .pq .n{flex:0 0 auto; width:15px; height:15px; border-radius:50%; background:#1A1C1E; color:#fff; font-size:9px; font-weight:750; display:grid; place-items:center; margin-top:1px}
+  #printRoot .pq p{font-size:9px; line-height:1.45}
+  #printRoot .pq b{font-weight:750}
+  #printRoot .pq .hl-perf{background:#FF6600; color:#fff; font-weight:750; padding:0 4px; border-radius:3px}
+  #printRoot .pq .hl-enab{background:#CCFFFF; color:#0B4A52; font-weight:750; padding:0 4px; border-radius:3px; border:1px solid #7FC6CC}
+  #printRoot .pq .expl{font-size:8px; color:#5F6469; margin-top:1px}
+  #printRoot .plegend{display:flex; align-items:flex-start; gap:26px; flex-wrap:wrap; border:1px solid #E2E4E7; border-radius:6px; padding:10px 14px; margin-bottom:26px; width:max-content; max-width:100%}
+  #printRoot .plegend .lgt{font-size:8.5px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:#5F6469; margin-bottom:5px}
+  #printRoot .plegend .lgi{display:flex; align-items:center; gap:5px; font-size:8.5px; color:#1A1C1E; margin-bottom:3px}
+  #printRoot .plegend .sw{width:9px; height:9px; border-radius:2px; flex:0 0 auto}
+  #printRoot .pb-apex{background:#000; color:#fff; width:340px; padding:12px 16px; font-size:17px; font-weight:750; letter-spacing:.16em; text-transform:uppercase}
+  #printRoot .pb-pillar{background:#FF6600; color:#fff; width:230px; padding:9px 12px; font-size:13px; font-weight:750}
+  #printRoot .pb-area{background:#FF6600; color:#fff; width:200px; padding:8px 11px; font-size:11.5px; font-weight:750}
+  #printRoot .pb-category{background:#CCFFFF; color:#0B4A52; border:1px solid #7FC6CC; width:180px; padding:7px 10px}
+  #printRoot .pb-driver{background:#CCFFFF; color:#0B4A52; border:1px solid #7FC6CC; width:158px; padding:6px 8px}
+  #printRoot .pb-category .bt{font-size:10px; font-weight:750; line-height:1.2}
+  #printRoot .pb-driver .bt{font-size:9px; font-weight:750; line-height:1.2}
+  #printRoot .pb-category .bd,#printRoot .pb-driver .bd{font-size:7.5px; font-style:italic; line-height:1.3; margin-top:2px; opacity:.85}
+  #printRoot .pacts{width:158px; text-align:left}
+  #printRoot .pact{position:relative; font-size:7.6px; line-height:1.32; padding:3px 4px 3px 6px; border-left:3px solid var(--pc); border-bottom:.5px solid #E7E9EC; background:#fff; color:#1A1C1E}
+  #printRoot .pact:last-child{border-bottom:0}
+  #printRoot .pflag{display:inline-block; font-size:6.3px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#fff; border-radius:2px; padding:0.5px 3px; margin-right:3px; vertical-align:1px}
+  #printRoot .pflag.f-priority{background:#E0A200}
+  #printRoot .pflag.f-needs{background:#5B6B86}
+  #printRoot [data-tag="priority"]{outline:2.5px solid #E0A200; outline-offset:-1px}
+  #printRoot [data-tag="needs"]{outline:2.5px solid #5B6B86; outline-offset:-1px}
+  #printRoot .pband{margin-bottom:34px}
+  #printRoot .pband2h{display:flex; align-items:center; gap:10px; margin:0 0 0 4px}
+  #printRoot .pband2h .cont{font-size:8.5px; color:#5F6469; font-style:italic}
+  #printRoot .pfoot{display:flex; align-items:center; justify-content:space-between; gap:16px; border-top:1px solid #E2E4E7; padding-top:14px; margin-top:10px; font-size:9px; color:#5F6469; width:100%}
+  #printRoot .pfoot .brand{display:inline-flex; align-items:center; gap:6px; color:#647E96; font-weight:700; font-size:11px}
+  #printRoot .pfoot .brand svg{width:15px; height:17px}
+
+  /* --- one-page priorities report --- */
+  #printRoot .report{width:7.3in; margin:0 auto; padding:0.15in 0}
+  #printRoot .rhead{display:flex; align-items:center; gap:13px; border-bottom:2.5px solid #FF6600; padding-bottom:12px; margin-bottom:6px}
+  #printRoot .rhead svg{width:34px; height:38px; flex:0 0 auto}
+  #printRoot .rhead h1{font-size:19px; font-weight:800; letter-spacing:.02em; color:#1A1C1E; line-height:1.15}
+  #printRoot .rhead .rsub{font-size:10px; color:#5F6469; margin-top:2px}
+  #printRoot .rhead .rsub b{color:#FF6600; font-weight:800; letter-spacing:.08em; text-transform:uppercase}
+  #printRoot .rmeta{display:flex; gap:22px; font-size:9.5px; color:#5F6469; margin:8px 0 16px}
+  #printRoot .rmeta b{color:#1A1C1E}
+  #printRoot .rgrp{margin:14px 0 8px; display:flex; align-items:center; gap:7px; font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase}
+  #printRoot .rgrp .sw{width:11px; height:11px; border-radius:50%}
+  #printRoot .rgrp.g-priority{color:#B48200}
+  #printRoot .rgrp.g-needs{color:#5B6B86}
+  #printRoot .rrow{display:flex; align-items:flex-start; gap:9px; border:1px solid #E2E4E7; border-left:4px solid var(--fc); border-radius:5px; padding:7px 10px; margin-bottom:6px; page-break-inside:avoid}
+  #printRoot .rrow .rb{flex:1 1 auto}
+  #printRoot .rrow .rt{font-size:10.5px; font-weight:700; color:#1A1C1E; line-height:1.3}
+  #printRoot .rrow .rp{font-size:8.5px; color:#5F6469; margin-top:1.5px; line-height:1.35}
+  #printRoot .rrow .rk{flex:0 0 auto; font-size:7.5px; font-weight:750; letter-spacing:.06em; text-transform:uppercase; color:#5F6469; border:1px solid #E2E4E7; border-radius:999px; padding:2px 7px; margin-top:1px; white-space:nowrap}
+  #printRoot .rrow .rk .csw{display:inline-block; width:7px; height:7px; border-radius:2px; margin-right:4px; vertical-align:-0.5px}
+  #printRoot .rempty{border:1.5px dashed #C9CDD2; border-radius:8px; padding:18px; color:#5F6469; font-size:10.5px; line-height:1.5; text-align:center}
+  #printRoot .rfoot{border-top:1px solid #E2E4E7; margin-top:16px; padding-top:9px; display:flex; justify-content:space-between; align-items:center; font-size:8.5px; color:#5F6469}
+  #printRoot .rfoot .brand{display:inline-flex; align-items:center; gap:5px; color:#647E96; font-weight:700}
+  #printRoot .rfoot .brand svg{width:12px; height:14px}
 </style>
 </head>
 <body>
@@ -245,6 +368,10 @@
       </div>
     </div>
     <div class="topbtns">
+      <button class="pill" id="printBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+        Print
+      </button>
       <button class="pill" id="aboutBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
         About
@@ -329,7 +456,35 @@
       <div id="flagsList"></div>
     </div>
   </div>
+
+  <div class="about" id="printOv" hidden>
+    <div class="apanel" role="dialog" aria-modal="true" aria-labelledby="printTitle">
+      <button class="aclose" id="printClose" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="ahead">
+        <svg class="mark" viewBox="0 0 32 36" aria-hidden="true"><use href="#im-mark"/></svg>
+        <h2 id="printTitle">Print the Map</h2>
+      </div>
+      <button class="popt" type="button" data-print="poster">
+        <span class="pico" style="background:#FF6600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M9 8v9"/><path d="M15 8v9"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></span>
+        <span class="pbody">
+          <span class="pt">Full map poster — with your flags</span>
+          <span class="pd">The entire Education Performance Map on one large sheet, with every Priority and Needs Improvement flag highlighted. Sized for large-format printing — save as PDF and send to a poster printer.</span>
+        </span>
+      </button>
+      <button class="popt" type="button" data-print="report">
+        <span class="pico" style="background:#E0A200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg></span>
+        <span class="pbody">
+          <span class="pt">Improvement Priorities Report</span>
+          <span class="pd">A one-page summary of everything you've flagged, grouped by Priority and Needs Improvement, with each item's location on the map. Prints on standard letter paper.</span>
+        </span>
+      </button>
+      <div class="pnote">In the print dialog, choose "Save as PDF." For the single-sheet poster, use Chrome or Edge and keep paper size set to the default so the custom poster dimensions are used; other browsers may split it across pages. Flags are stored in this browser, so print from the same device where you marked them.</div>
+    </div>
+  </div>
 </div>
+<div id="printRoot" aria-hidden="true"></div>
 
 <script>
 (function(){
@@ -379,14 +534,32 @@
   /* ---- build a scene ---- */
   function buildScene(path){
     var node=nodeAt(path), scene=document.createElement("div"); scene.className="scene";
-    var svg=document.createElementNS("http://www.w3.org/2000/svg","svg"); svg.setAttribute("class","links"); scene.appendChild(svg);
+    var scol=document.createElement("div"); scol.className="scol"; scene.appendChild(scol);
+    var svg=document.createElementNS("http://www.w3.org/2000/svg","svg"); svg.setAttribute("class","links"); scol.appendChild(svg);
+
+    var UP='<svg class="up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg>';
+    var spine=document.createElement("div"); spine.className="spine";
+
+    /* ancestor pathway: every level chosen so far stays visible and clickable */
+    for(var ai=0; ai<path.length; ai++){
+      var apath=path.slice(0,ai), an=nodeAt(apath), aid=idOf(apath);
+      var ab=document.createElement("button");
+      ab.className="anc k-"+an.k;
+      ab.setAttribute("data-path", apath.join(","));
+      ab.setAttribute("data-pathid", aid);
+      ab.setAttribute("title","Jump back to "+an.t);
+      if(tags[aid]) ab.setAttribute("data-tag",tags[aid]);
+      ab.innerHTML=tagMarkup(aid)+'<span class="eyebrow">'+esc(LABEL[an.k])+'</span><span class="nt">'+esc(an.t)+'</span>'+UP;
+      spine.appendChild(ab);
+    }
 
     var fid=idOf(path);
     var focus=document.createElement(path.length?"button":"div");
     focus.className="node focus k-"+node.k;
     if(tags[fid]) focus.setAttribute("data-tag",tags[fid]);
     focus.innerHTML=tagMarkup(fid)+'<span class="eyebrow">'+esc(LABEL[node.k])+'</span><span class="nt">'+esc(node.t)+'</span>'+(node.d?'<span class="fdesc">'+esc(node.d)+'</span>':'');
-    scene.appendChild(focus);
+    spine.appendChild(focus);
+    scol.appendChild(spine);
 
     var kids=node.kids||[];
     if(node.k==="driver"){
@@ -399,16 +572,16 @@
         cats.forEach(function(c){ html+='<button class="chip" type="button" data-cat="'+c+'" style="--cat:'+CAT_COLOR[c]+'"><span class="sw"></span>'+esc(CAT_LABEL[c])+'</button>'; });
         html+='</div><div class="arows">';
         kids.forEach(function(a,i){
-          var aid=fid+"."+i;
-          html+='<div class="action" data-i="'+i+'" data-cat="'+a.c+'" style="--cat:'+CAT_COLOR[a.c]+'"'+(tags[aid]?' data-tag="'+tags[aid]+'"':'')+'>'+tagMarkup(aid)+'<span class="tick"></span><p>'+esc(a.t)+'</p></div>';
+          var aid2=fid+"."+i;
+          html+='<div class="action" data-i="'+i+'" data-cat="'+a.c+'" style="--cat:'+CAT_COLOR[a.c]+'"'+(tags[aid2]?' data-tag="'+tags[aid2]+'"':'')+'>'+tagMarkup(aid2)+'<span class="tick"></span><p>'+esc(a.t)+'</p></div>';
         });
         html+='</div>';
         list.innerHTML=html;
-        scene.appendChild(list);
+        scol.appendChild(list);
       } else {
         var ph=document.createElement("div"); ph.className="ph";
         ph.innerHTML="<b>Actions for this driver aren't loaded yet.</b>";
-        scene.appendChild(ph);
+        scol.appendChild(ph);
       }
     } else if(kids.length){
       var below=document.createElement("div"); below.className="below";
@@ -419,23 +592,34 @@
         b.innerHTML=tagMarkup(cid)+'<span class="eyebrow">'+esc(LABEL[c.k])+'</span><span class="nt">'+esc(c.t)+'</span><span class="foot"><span class="cnt">'+esc(childCount(c))+'</span>'+GO+'</span>';
         below.appendChild(b);
       });
-      scene.appendChild(below);
+      scol.appendChild(below);
     }
     return scene;
   }
 
   function localRect(el){ var s=stage.getBoundingClientRect(), r=el.getBoundingClientRect(); return {w:r.width,cx:r.left-s.left+r.width/2,cy:r.top-s.top+r.height/2}; }
+  function scrollToFocus(scene){
+    var f=scene.querySelector(".alist")||scene.querySelector(".below")||scene.querySelector(".ph")||scene.querySelector(".focus"); if(!f) return;
+    var fb=f.getBoundingClientRect(), sb=scene.getBoundingClientRect();
+    var target=scene.scrollTop + (fb.bottom - sb.bottom) + 18;
+    scene.scrollTop=Math.max(0, Math.min(target, scene.scrollHeight - scene.clientHeight));
+  }
   function drawLinks(scene){
     var svg=scene.querySelector(".links"); while(svg.firstChild) svg.removeChild(svg.firstChild);
-    var focus=scene.querySelector(".focus"); if(!focus) return;
-    var sb=scene.getBoundingClientRect();
+    var scol=scene.querySelector(".scol"), focus=scene.querySelector(".focus"); if(!scol||!focus) return;
+    var sb=scol.getBoundingClientRect();
     function rel(el){ var r=el.getBoundingClientRect(); return {y:r.top-sb.top, h:r.height, cx:r.left-sb.left+r.width/2}; }
+    function seg(d){ var p=document.createElementNS("http://www.w3.org/2000/svg","path"); p.setAttribute("d",d); svg.appendChild(p); }
+    /* vertical spine through the chosen pathway */
+    var chain=[].slice.call(scene.querySelectorAll(".anc")); chain.push(focus);
+    for(var s=0;s<chain.length-1;s++){ var a=rel(chain[s]), b=rel(chain[s+1]); seg("M "+a.cx+" "+(a.y+a.h)+" L "+b.cx+" "+b.y); }
+    /* elbows from focus down to the current layer */
     var f=rel(focus), fx=f.cx, fy=f.y+f.h;
     var t=scene.querySelectorAll(".child"); if(!t.length){ var L=scene.querySelector(".alist, .ph"); if(L) t=[L]; }
-    for(var i=0;i<t.length;i++){ var c=rel(t[i]), cx=c.cx, cy=c.y, m=(fy+cy)/2; var p=document.createElementNS("http://www.w3.org/2000/svg","path"); var d = (Math.abs(cx-fx)<1) ? ("M "+fx+" "+fy+" L "+fx+" "+cy) : ("M "+fx+" "+fy+" L "+fx+" "+m+" L "+cx+" "+m+" L "+cx+" "+cy); p.setAttribute("d",d); svg.appendChild(p); }
+    for(var i=0;i<t.length;i++){ var c=rel(t[i]), cx=c.cx, cy=c.y, m=(fy+cy)/2; seg((Math.abs(cx-fx)<1) ? ("M "+fx+" "+fy+" L "+fx+" "+cy) : ("M "+fx+" "+fy+" L "+fx+" "+m+" L "+cx+" "+m+" L "+cx+" "+cy)); }
   }
 
-  function mountFirst(){ var sc=buildScene(state.path); stage.appendChild(sc); drawLinks(sc); state.scene=sc; updateChrome(); }
+  function mountFirst(){ var sc=buildScene(state.path); stage.appendChild(sc); drawLinks(sc); scrollToFocus(sc); state.scene=sc; updateChrome(); }
 
   function navigate(target, mode, childIdx){
     if(state.animating) return;
@@ -443,11 +627,15 @@
     stage.appendChild(newScene);
     newScene.style.transform="none"; newScene.style.opacity="0"; newScene.style.visibility="hidden";
     drawLinks(newScene);
+    scrollToFocus(newScene);
     if(reduce){ oldScene.remove(); newScene.style.visibility=""; newScene.style.opacity=""; newScene.style.transform=""; state.scene=newScene; state.path=target; updateChrome(); return; }
     var A,B;
     if(mode==="in"){ A=localRect(oldScene.querySelector('.child[data-idx="'+childIdx+'"]')); B=localRect(newScene.querySelector('.focus')); }
-    else if(mode==="out"){ A=localRect(oldScene.querySelector('.focus')); var slot=newScene.querySelector('.child[data-idx="'+childIdx+'"]'); B=slot?localRect(slot):localRect(newScene.querySelector('.focus')); }
-    else { A=localRect(oldScene.querySelector('.focus')); B=localRect(newScene.querySelector('.focus')); }
+    else { /* out or jump: the destination is already visible in the old pathway - fly from it */
+      var src=oldScene.querySelector('.anc[data-pathid="'+idOf(target)+'"]');
+      A=localRect(src || oldScene.querySelector('.focus'));
+      B=localRect(newScene.querySelector('.focus'));
+    }
     state.animating=true;
     var sN=A.w/B.w, txN=A.cx-sN*B.cx, tyN=A.cy-sN*B.cy;
     newScene.style.transform="translate("+txN+"px,"+tyN+"px) scale("+sN+")"; newScene.style.visibility="visible"; void newScene.offsetWidth;
@@ -461,7 +649,7 @@
 
   function zoomInChild(i){ var n=nodeAt(state.path), c=n.kids[i]; if(!c||c.k==="action") return; navigate(state.path.concat(i),"in",i); }
   function zoomOut(){ if(!state.path.length) return; var i=state.path[state.path.length-1]; navigate(state.path.slice(0,-1),"out",i); }
-  function goToPath(t){ if(state.animating) return; var c=state.path; if(t.length===c.length) return; if(t.length===c.length-1){ zoomOut(); return; } navigate(t,"jump"); }
+  function goToPath(t){ if(state.animating) return; var c=state.path; if(idOf(t)===idOf(c)) return; if(t.length===c.length-1 && idOf(t)===idOf(c.slice(0,-1))){ zoomOut(); return; } navigate(t,"jump"); }
 
   /* ---- color filter ---- */
   function toggleChip(cat){
@@ -504,6 +692,7 @@
     var tag=e.target.closest(".tag"); if(tag){ cycleTag(tag.dataset.tagid, tag); return; }
     var chip=e.target.closest(".chip"); if(chip){ toggleChip(chip.dataset.cat); return; }
     if(e.target.closest(".alist")) return;
+    var anc=e.target.closest(".anc"); if(anc){ var ap=anc.dataset.path ? anc.dataset.path.split(",").map(Number) : []; goToPath(ap); return; }
     var child=e.target.closest(".child"); if(child){ zoomInChild(parseInt(child.dataset.idx,10)); return; }
     if(e.target.closest(".focus")){ zoomOut(); return; }
     zoomOut();
@@ -527,11 +716,11 @@
     var out={ priority:[], needs:[] };
     (function walk(node, path, trail){
       var id=idOf(path), t=tags[id];
-      if(t && out[t]) out[t].push({ title:node.t, trail:trail.slice(0,-1), path:path.slice() });
+      if(t && out[t]) out[t].push({ title:node.t, trail:trail.slice(0,-1), path:path.slice(), kind:node.k });
       if(node.k==="driver"){
         (node.kids||[]).forEach(function(a,i){
           var at=tags[id+"."+i];
-          if(at && out[at]) out[at].push({ title:a.t, trail:trail.slice(), path:path.slice() });
+          if(at && out[at]) out[at].push({ title:a.t, trail:trail.slice(), path:path.slice(), kind:"action", cat:a.c });
         });
       } else {
         (node.kids||[]).forEach(function(c,i){ walk(c, path.concat(i), trail.concat(c.t)); });
@@ -580,8 +769,135 @@
     });
   }
 
-  document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ if(flagsOv && !flagsOv.hidden){ closeFlags(); return; } if(aboutEl && !aboutEl.hidden){ closeAbout(); return; } zoomOut(); } });
-  var rT; window.addEventListener("resize", function(){ clearTimeout(rT); rT=setTimeout(function(){ if(state.animating||!state.scene) return; var f=buildScene(state.path); stage.replaceChild(f,state.scene); drawLinks(f); state.scene=f; applyFilter(); }, 140); });
+  /* ---- printing: poster + priorities report ---- */
+  var printOv=document.getElementById("printOv"), printBtn=document.getElementById("printBtn"), printClose=document.getElementById("printClose"), printRoot=document.getElementById("printRoot"), pageStyle=null;
+  var MARK='<svg viewBox="0 0 32 36" aria-hidden="true"><use href="#im-mark"/></svg>';
+
+  function flagChip(t){ return '<span class="pflag f-'+t+'">'+(t==="priority"?"Priority":"Needs improvement")+'</span>'; }
+
+  function pNode(node, path){
+    var id=idOf(path), tag=tags[id]||"";
+    var box='<div class="pbox pb-'+node.k+((node.kids&&node.kids.length)?' haskids':'')+'"'+(tag?' data-tag="'+tag+'"':'')+'>';
+    if(node.k==="category"||node.k==="driver"){
+      box+=(tag?flagChip(tag):'')+'<span class="bt">'+esc(node.t)+'</span>'+(node.d?'<span class="bd">'+esc(node.d)+'</span>':'');
+    } else {
+      box+=(tag?flagChip(tag):'')+esc(node.t);
+    }
+    box+='</div>';
+    var kidsHtml='';
+    if(node.k==="driver"){
+      if(node.kids&&node.kids.length){
+        kidsHtml='<div class="tk"><div class="tc"><div class="pacts">';
+        node.kids.forEach(function(a,i){
+          var at=tags[id+"."+i]||"";
+          kidsHtml+='<div class="pact"'+(at?' data-tag="'+at+'"':'')+' style="--pc:'+CAT_COLOR[a.c]+'">'+(at?flagChip(at):'')+esc(a.t)+'</div>';
+        });
+        kidsHtml+='</div></div></div>';
+      }
+    } else if(node.kids&&node.kids.length){
+      kidsHtml='<div class="tk">';
+      node.kids.forEach(function(c,i){ kidsHtml+='<div class="tc">'+pNode(c, path.concat(i))+'</div>'; });
+      kidsHtml+='</div>';
+    }
+    return '<div class="pnode">'+box+kidsHtml+'</div>';
+  }
+
+  function posterLegend(){
+    function items(cats){ return cats.map(function(c){ return '<div class="lgi"><span class="sw" style="background:'+CAT_COLOR[c]+'"></span>'+esc(CAT_LABEL[c])+'</div>'; }).join(''); }
+    return '<div class="plegend">'
+      + '<div><div class="lgt">Map structure</div>'
+      +   '<div class="lgi"><span class="sw" style="background:#FF6600"></span>Performance Drivers</div>'
+      +   '<div class="lgi"><span class="sw" style="background:#CCFFFF;border:1px solid #7FC6CC"></span>Assets &amp; Enablers</div></div>'
+      + '<div><div class="lgt">Help Students &amp; Teachers Succeed</div>'+items(["inform","illustrate","enable","ensure"])+'</div>'
+      + '<div><div class="lgt">Help Schools Manage Resources</div>'+items(["focus","aspire","direct","recognize"])+'</div>'
+      + '<div><div class="lgt">Your flags</div>'
+      +   '<div class="lgi"><span class="sw" style="background:#E0A200;border-radius:50%"></span>Priority</div>'
+      +   '<div class="lgi"><span class="sw" style="background:#5B6B86;border-radius:50%"></span>Needs improvement</div></div>'
+      + '</div>';
+  }
+
+  function buildPoster(){
+    var apexTag=tags["root"]||"";
+    var band1='<div class="pband"><div class="pnode">'
+      + '<div class="pbox pb-apex haskids"'+(apexTag?' data-tag="'+apexTag+'"':'')+'>'+(apexTag?flagChip(apexTag):'')+esc(MAP.t)+'</div>'
+      + '<div class="tk"><div class="tc">'+pNode(MAP.kids[0],[0])+'</div><div class="tc">'+pNode(MAP.kids[1],[1])+'</div></div>'
+      + '</div></div>';
+    var band2='<div class="pband"><div class="pband2h"><span class="cont">Continued &mdash; the third branch of '+esc(MAP.t)+':</span></div>'+pNode(MAP.kids[2],[2])+'</div>';
+    return '<div class="poster">'
+      + '<div class="phead">'
+      +   '<div class="pintro"><h1>Education Performance Map<sup>&trade;</sup></h1>'
+      +     '<p>Ultimately, educational performance is driven by the performance of students and educators. It makes sense, then, that everything we do to improve education should be focused on making both of these groups more successful. This means providing our students and teachers with the capabilities, motivation and resources they need to make the most of their talents.</p>'
+      +     '<p>This map is intended to help all of us understand and discuss the factors that drive educational performance. It is not perfect and it is not complete, but it can serve as a tool for focusing and accelerating our individual and collective performance improvement efforts. To get started, ask yourself the questions to the right.</p></div>'
+      +   '<div class="papex">'+posterLegend()+'</div>'
+      +   '<div class="pquestions"><div class="qh">3 Key Questions</div><div class="qs">to guide your improvement efforts</div>'
+      +     '<div class="pq"><span class="n">1</span><div><p><b>Which <span class="hl-perf">Performance Drivers</span> (orange boxes) are most in need of improvement for my child, class or school?</b></p><p class="expl">Identify which of the orange boxes are most important right now. There are many things you can do, and this will help you prioritize.</p></div></div>'
+      +     '<div class="pq"><span class="n">2</span><div><p><b>Which <span class="hl-enab">Assets and Enablers</span> (blue-green boxes) are key to improvement in the high-priority areas?</b></p><p class="expl">Identify which of the blue-green boxes are most important for the orange boxes you selected. This will help you focus your improvement efforts on key skills and resources.</p></div></div>'
+      +     '<div class="pq"><span class="n">3</span><div><p><b>What <u>Actions</u> (bottom-level activities) can we take to start making needed improvements?</b></p><p class="expl">Identify actions (bottom-level of the map) you can take to strengthen the key skills and resources you have chosen. This will provide ideas that jumpstart your creativity and progress.</p></div></div></div>'
+      + '</div>'
+      + band1 + band2
+      + '<div class="pfoot"><span>&copy; 2006 All rights reserved. 0108. www.insightmaps.org</span><span class="brand">'+MARK+'InsightMaps</span></div>'
+      + '</div>';
+  }
+
+  function buildReport(){
+    var data=collectFlags();
+    var d=new Date(), dateStr=d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});
+    var total=data.priority.length+data.needs.length;
+    var html='<div class="report">'
+      + '<div class="rhead">'+MARK+'<div><h1>Improvement Priorities Report</h1><div class="rsub"><b>Education Performance Map&trade;</b> &middot; InsightMaps &middot; www.insightmaps.org</div></div></div>'
+      + '<div class="rmeta"><span>Prepared <b>'+esc(dateStr)+'</b></span><span>Flagged items <b>'+total+'</b></span><span>Priority <b>'+data.priority.length+'</b></span><span>Needs improvement <b>'+data.needs.length+'</b></span></div>';
+    if(!total){
+      html+='<div class="rempty"><b>Nothing is flagged yet.</b><br>In the map, tap the small circle on any box or action to mark it as Priority; tap it again for Needs improvement, then print this report.</div>';
+    } else {
+      [["priority","Priority","#E0A200"],["needs","Needs improvement","#5B6B86"]].forEach(function(g){
+        var items=data[g[0]]; if(!items.length) return;
+        html+='<div class="rgrp g-'+g[0]+'"><span class="sw" style="background:'+g[2]+'"></span>'+g[1]+' ('+items.length+')</div>';
+        items.forEach(function(it){
+          var trail=it.trail.length?it.trail.join(" \u203A "):"Top";
+          var kindChip = it.kind==="action"
+            ? '<span class="rk"><span class="csw" style="background:'+CAT_COLOR[it.cat]+'"></span>'+esc(CAT_LABEL[it.cat])+'</span>'
+            : '<span class="rk">'+esc(LABEL[it.kind])+'</span>';
+          html+='<div class="rrow" style="--fc:'+g[2]+'"><div class="rb"><div class="rt">'+esc(it.title)+'</div><div class="rp">'+esc(trail)+'</div></div>'+kindChip+'</div>';
+        });
+      });
+    }
+    html+='<div class="rfoot"><span>&copy; 2006 All rights reserved. 0108. www.insightmaps.org</span><span class="brand">'+MARK+'InsightMaps</span></div></div>';
+    return html;
+  }
+
+  function cleanupPrint(){ printRoot.innerHTML=""; if(pageStyle&&pageStyle.parentNode) pageStyle.parentNode.removeChild(pageStyle); pageStyle=null; }
+  function doPrint(kind){
+    cleanupPrint();
+    var css;
+    if(kind==="poster"){
+      printRoot.innerHTML=buildPoster();
+      printRoot.style.cssText="display:block;position:absolute;left:-100000px;top:0;visibility:hidden";
+      var el=printRoot.querySelector(".poster");
+      var W=Math.ceil(el.offsetWidth)+24, H=Math.ceil(el.offsetHeight)+24;
+      printRoot.style.cssText="";
+      css="@media print{ @page{size:"+W+"px "+H+"px; margin:0} }";
+    } else {
+      printRoot.innerHTML=buildReport();
+      css="@media print{ @page{size:letter portrait; margin:0.55in} }";
+    }
+    pageStyle=document.createElement("style"); pageStyle.textContent=css; document.head.appendChild(pageStyle);
+    closePrintMenu();
+    setTimeout(function(){ window.print(); }, 80);
+  }
+  function openPrintMenu(){ printOv.hidden=false; }
+  function closePrintMenu(){ printOv.hidden=true; }
+  if(printBtn) printBtn.addEventListener("click", openPrintMenu);
+  if(printClose) printClose.addEventListener("click", closePrintMenu);
+  if(printOv){
+    printOv.addEventListener("click", function(e){
+      if(e.target===printOv){ closePrintMenu(); return; }
+      var opt=e.target.closest(".popt"); if(opt) doPrint(opt.dataset.print);
+    });
+  }
+  window.addEventListener("afterprint", function(){ setTimeout(cleanupPrint, 200); });
+
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ if(printOv && !printOv.hidden){ closePrintMenu(); return; } if(flagsOv && !flagsOv.hidden){ closeFlags(); return; } if(aboutEl && !aboutEl.hidden){ closeAbout(); return; } zoomOut(); } });
+  var rT; window.addEventListener("resize", function(){ clearTimeout(rT); rT=setTimeout(function(){ if(state.animating||!state.scene) return; var f=buildScene(state.path); stage.replaceChild(f,state.scene); drawLinks(f); scrollToFocus(f); state.scene=f; applyFilter(); }, 140); });
 
   mountFirst();
   updateFlagsBadge();
