@@ -118,7 +118,7 @@
 
   /* Stage */
   #edmap .stage{position:relative; flex:1 1 auto; overflow:hidden; background:var(--paper); cursor:default}
-  #edmap .scene{position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; display:flex; transform-origin:0 0; will-change:transform,opacity}
+  #edmap .scene{position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; display:flex; transform-origin:0 0; will-change:transform,opacity}
   #edmap .scene::-webkit-scrollbar{width:8px}
   #edmap .scene::-webkit-scrollbar-thumb{background:#D5D8DC; border-radius:8px}
   #edmap .scol{position:relative; margin:auto; display:flex; flex-direction:column; align-items:center; gap:clamp(34px,6vh,64px); padding:32px 28px; min-width:0; max-width:100%}
@@ -283,6 +283,54 @@
   }
   @media (prefers-reduced-motion:reduce){ #edmap .scene.anim{transition:none} #edmap .node{transition:none} }
 
+  /* Expand button: only when embedded in another site, on constrained screens */
+  #edmap .pill.expand{display:none; color:var(--brand-blue); border-color:#BCD2EC}
+  #edmap .pill.expand:hover{color:#1D4E8F; border-color:var(--brand-blue)}
+  @media (max-width:720px), (max-height:620px){ #edmap.embedded .pill.expand:not([hidden]){display:inline-flex} }
+
+  /* Bigger tap targets on touch devices (never applies to mouse/desktop) */
+  @media (pointer:coarse){
+    #edmap .tag{width:24px; height:24px}
+    #edmap .tag .dot{width:9px; height:9px}
+    #edmap .anc .tag{width:20px; height:20px}
+    #edmap .anc .tag .dot{width:7px; height:7px}
+  }
+
+  /* Compact mode 1 - short viewports (typical embedded iframe): reclaim vertical space */
+  @media (max-height:620px){
+    #edmap{min-height:0}
+    #edmap .legend{display:none}
+    #edmap .top{padding:8px 12px}
+    #edmap .crumbbar{padding:0 10px 0 14px}
+    #edmap .crumbs{padding:5px 0}
+    #edmap .scol{padding:20px 20px; gap:clamp(26px,5vh,44px)}
+    #edmap .spine{gap:14px}
+  }
+  /* Compact mode 2 - very short viewports: icon-only buttons, smaller boxes */
+  @media (max-height:460px){
+    #edmap{min-height:300px}
+    #edmap .plabel{display:none}
+    #edmap .pill{padding:6px 8px; gap:0}
+    #edmap .flagsbtn{padding:4px 7px; gap:4px}
+    #edmap .top{padding:6px 10px}
+    #edmap .ttl b{font-size:11px; letter-spacing:.08em}
+    #edmap .ttl span{display:none}
+    #edmap .mark{width:20px; height:23px}
+    #edmap .sinput{width:130px}
+    #edmap .sinput:focus{width:170px}
+    #edmap .anc{padding:6px 34px 6px 12px; width:min(340px,86vw)}
+    #edmap .anc .nt{font-size:12px}
+    #edmap .anc .eyebrow{font-size:8px}
+    #edmap .focus{padding:12px 14px; width:min(380px,86%)}
+    #edmap .focus .nt{font-size:clamp(16px,3vw,20px)}
+    #edmap .focus .fdesc{font-size:11.5px; margin-top:6px}
+    #edmap .child{width:150px; min-height:76px; padding:10px 11px 9px}
+    #edmap .child .nt{font-size:13px}
+    #edmap .alist{max-height:calc(100vh - 140px)}
+    #edmap .scol{padding:14px 16px; gap:22px}
+    #edmap .spine{gap:11px}
+  }
+
   /* Print menu options */
   #edmap .popt{display:flex; align-items:flex-start; gap:13px; width:100%; text-align:left; border:1px solid var(--hair); border-radius:9px; background:#fff; padding:14px 15px; margin-bottom:10px; cursor:pointer; font:inherit; transition:.14s}
   #edmap .popt:hover{border-color:#C3C7CC; transform:translateY(-1px); box-shadow:0 3px 8px rgba(26,28,30,.08)}
@@ -433,17 +481,21 @@
         <input class="sinput" id="searchInput" type="text" placeholder="Search the map…" autocomplete="off" spellcheck="false" aria-label="Search the map" />
         <div class="sdrop" id="searchDrop" hidden></div>
       </div>
+      <button class="pill expand" id="expandBtn" type="button" hidden aria-label="Open the map full screen in a new tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+        <span class="plabel">Full screen</span>
+      </button>
       <button class="pill" id="printBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
-        Print
+        <span class="plabel">Print</span>
       </button>
       <button class="pill" id="aboutBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
-        About
+        <span class="plabel">About</span>
       </button>
       <button class="pill" id="homeBtn" type="button" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-        Top
+        <span class="plabel">Top</span>
       </button>
     </div>
   </div>
@@ -452,7 +504,7 @@
     <nav class="crumbs" id="crumbs" aria-label="Map location"></nav>
     <button class="pill flagsbtn" id="flagsBtn" type="button" aria-label="Show flagged items">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/></svg>
-      Flags
+      <span class="plabel">Flags</span>
       <span class="fcount" id="flagsCount">0</span>
     </button>
   </div>
@@ -502,7 +554,7 @@
         </div>
       </div>
       <div class="afoot">
-        <span>© 2006 All rights reserved. 0108. www.insightmaps.org</span>
+        <span>© 2006 GBD Ideas LLC. All rights reserved. 0108. www.insightmaps.org</span>
         <span class="brand"><svg viewBox="0 0 32 36" aria-hidden="true"><use href="#im-mark"/></svg>InsightMaps</span>
       </div>
     </div>
@@ -1102,15 +1154,30 @@
   document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ if(!searchDrop.hidden || searchWrap.classList.contains("open")){ closeSearch(); return; } if(printOv && !printOv.hidden){ closePrintMenu(); return; } if(flagsOv && !flagsOv.hidden){ closeFlags(); return; } if(aboutEl && !aboutEl.hidden){ closeAbout(); return; } zoomOut(); } });
   var rT; window.addEventListener("resize", function(){ clearTimeout(rT); rT=setTimeout(function(){ if(state.animating||!state.scene) return; var f=buildScene(state.path); stage.replaceChild(f,state.scene); drawLinks(f); scrollToFocus(f); state.scene=f; applyFilter(); }, 140); });
 
-  /* arriving from an embedded page's print request? */
+  /* arriving from an embedded page's print request or full-screen hand-off? */
   var autoprintKind=null;
   (function(){
-    var m=/[#&]autoprint=(poster|report)/.exec(location.hash||"");
-    if(!m) return;
-    autoprintKind=m[1];
-    var fm=/[#&]flags=([^&]*)/.exec(location.hash||"");
-    if(fm && fm[1]){ try{ mergeTagsFromParam(decodeURIComponent(fm[1])); }catch(e){} }
+    var h=location.hash||"";
+    var m=/[#&]autoprint=(poster|report)/.exec(h);
+    var fm=/[#&]flags=([^&]*)/.exec(h);
+    if(!m && !fm) return;
+    if(m) autoprintKind=m[1];
+    if(fm && fm[1]){ try{ mergeTagsFromParam(decodeURIComponent(fm[1])); saveTags(); }catch(e){} }
     try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
+  })();
+
+  /* embedded mode: compact chrome + one-tap full-screen escape hatch */
+  (function(){
+    var emb=isEmbedded();
+    if(emb) document.getElementById("edmap").classList.add("embedded");
+    var expandBtn=document.getElementById("expandBtn");
+    if(expandBtn && emb){
+      expandBtn.hidden=false;
+      expandBtn.addEventListener("click", function(){
+        var u=location.href.split("#")[0]+"#flags="+encodeURIComponent(tagsToParam());
+        window.open(u,"_blank");
+      });
+    }
   })();
 
   mountFirst();
