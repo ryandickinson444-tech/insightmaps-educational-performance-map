@@ -4,6 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Education Performance Map — InsightMaps</title>
+<!-- iOS "Add to Home Screen" web-app support -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="InsightMaps" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <style>
   #edmap, #edmap *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
@@ -45,6 +51,7 @@
   #edmap .ttl b sup{font-size:8px; vertical-align:super; margin-left:1px; letter-spacing:0}
   #edmap .ttl span{font-size:11.5px; color:var(--muted); letter-spacing:0}
   #edmap .topbtns{display:flex; align-items:center; gap:8px; flex:0 0 auto}
+  #edmap .btnrow{display:flex; align-items:center; gap:8px}
   #edmap .pill{cursor:pointer; border:1px solid var(--hair); background:#fff; color:var(--muted); font:inherit; font-size:12.5px; font-weight:650; padding:7px 12px; border-radius:7px; display:inline-flex; align-items:center; gap:6px; transition:.15s}
   #edmap .pill:hover{color:var(--ink); border-color:#C3C7CC}
   #edmap .pill svg{width:14px; height:14px}
@@ -283,10 +290,39 @@
   }
   @media (prefers-reduced-motion:reduce){ #edmap .scene.anim{transition:none} #edmap .node{transition:none} }
 
+  /* "Add to Home Screen" banner: iPhone Safari, direct (non-embedded) visits only */
+  #a2hs{position:fixed; left:12px; right:12px; bottom:14px; z-index:9000;
+    background:#FFFFFF; border:1px solid #E2E4E7; border-radius:14px;
+    box-shadow:0 8px 28px rgba(26,28,30,.18); padding:14px 44px 14px 14px;
+    display:none; font-family:inherit; color:#1A1C1E;
+    opacity:0; transform:translateY(10px); transition:opacity .3s ease, transform .3s ease}
+  #a2hs.show{display:block}
+  #a2hs.in{opacity:1; transform:translateY(0)}
+  #a2hs .a2row{display:flex; align-items:flex-start; gap:11px}
+  #a2hs .a2mark{flex:0 0 auto; width:40px; height:40px; border-radius:9px; background:#F9A801;
+    display:flex; align-items:center; justify-content:center}
+  #a2hs .a2mark svg{width:22px; height:25px}
+  #a2hs .a2ttl{font-weight:700; font-size:14.5px; line-height:1.3; margin-bottom:3px}
+  #a2hs .a2txt{font-size:13.5px; line-height:1.45; color:#5F6469}
+  #a2hs .a2txt .aico{display:inline-block; vertical-align:-3px; width:16px; height:16px; margin:0 1px}
+  #a2hs .a2txt .aico svg{width:16px; height:16px; stroke:#2D6CBB}
+  #a2hs .a2txt b{color:#1A1C1E}
+  #a2hs .a2x{position:absolute; top:8px; right:8px; width:30px; height:30px; border:0; background:none;
+    color:#8A9096; cursor:pointer; border-radius:8px; display:flex; align-items:center; justify-content:center}
+  #a2hs .a2x:hover{background:#F2F3F5; color:#1A1C1E}
+  #a2hs .a2x svg{width:15px; height:15px}
+  @media (prefers-reduced-motion:reduce){ #a2hs{transition:none} }
+
   /* Expand button: only when embedded in another site, on constrained screens */
   #edmap .pill.expand{display:none; color:var(--brand-blue); border-color:#BCD2EC}
   #edmap .pill.expand:hover{color:#1D4E8F; border-color:var(--brand-blue)}
-  @media (max-width:720px), (max-height:620px){ #edmap.embedded .pill.expand:not([hidden]){display:inline-flex} }
+  @media (max-width:720px), (max-height:620px){
+    #edmap.embedded .pill.expand:not([hidden]){display:inline-flex}
+    #edmap.embedded .topbtns{flex-direction:column; align-items:stretch; gap:6px}
+    #edmap.embedded .btnrow{justify-content:flex-end}
+    #edmap.embedded .pill.expand{width:100%; justify-content:center; padding:8px 12px; font-size:13px}
+    #edmap.embedded .pill.expand .plabel{display:inline}
+  }
 
   /* Bigger tap targets on touch devices (never applies to mouse/desktop) */
   @media (pointer:coarse){
@@ -473,6 +509,7 @@
       </div>
     </div>
     <div class="topbtns">
+      <div class="btnrow">
       <div class="searchwrap" id="searchWrap">
         <button class="sbtn" id="searchToggle" type="button" aria-label="Search the map">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.8-3.8"/></svg>
@@ -481,10 +518,6 @@
         <input class="sinput" id="searchInput" type="text" placeholder="Search the map…" autocomplete="off" spellcheck="false" aria-label="Search the map" />
         <div class="sdrop" id="searchDrop" hidden></div>
       </div>
-      <button class="pill expand" id="expandBtn" type="button" hidden aria-label="Open the map full screen in a new tab">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
-        <span class="plabel">Full screen</span>
-      </button>
       <button class="pill" id="printBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
         <span class="plabel">Print</span>
@@ -496,6 +529,10 @@
       <button class="pill" id="homeBtn" type="button" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
         <span class="plabel">Top</span>
+      </button>
+      </div>
+      <button class="pill expand" id="expandBtn" type="button" hidden aria-label="Open the map full screen in a new tab">
+        <span class="plabel">Full screen</span>
       </button>
     </div>
   </div>
@@ -598,6 +635,24 @@
         </span>
       </button>
       <div class="pnote">In the print dialog, choose "Save as PDF." For the single-sheet poster, use Chrome or Edge and keep paper size set to the default so the custom poster dimensions are used; other browsers may split it across pages. If the map is embedded in another website, the print view opens in a new tab — your flags come with it. Flags are stored in this browser, so print from the same device where you marked them.</div>
+    </div>
+  </div>
+</div>
+<div id="a2hs" role="dialog" aria-label="Add to Home Screen" aria-hidden="true">
+  <button class="a2x" id="a2hsClose" aria-label="Dismiss">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <div class="a2row">
+    <span class="a2mark" aria-hidden="true">
+      <svg viewBox="0 0 32 36">
+        <path d="M15 3.4 C9.2 4.1 4.6 9 4.6 15 C4.6 21.4 9.6 26.6 14 31.6 L14 25.2 C11.4 22.2 9.4 19 9.4 15 C9.4 11.6 11.8 8.8 15 8 Z" fill="#FFFFFF"/>
+        <path d="M17 3.4 C22.8 4.1 27.4 9 27.4 15 C27.4 21.9 21.6 27.6 16 34 C15.5 33.4 15 32.9 14.6 32.3 L16.6 25.6 C19.6 22.5 22.6 19.2 22.6 15 C22.6 11.6 20.2 8.8 17 8 Z" fill="#FFFFFF" fill-opacity=".92"/>
+        <circle cx="16" cy="14.6" r="5.3" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+      </svg>
+    </span>
+    <div>
+      <div class="a2ttl">Add this map to your Home Screen</div>
+      <div class="a2txt">Tap the <b>Share</b> button <span class="aico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"><path d="M12 3v12"/><path d="M8 6l4-4 4 4"/><path d="M5 11v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg></span> at the bottom of Safari, then choose <b>&ldquo;Add to Home Screen&rdquo;</b> <span class="aico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 9v6M9 12h6"/></svg></span>. The map will open full screen, just like an app.</div>
     </div>
   </div>
 </div>
@@ -1178,6 +1233,32 @@
         window.open(u,"_blank");
       });
     }
+  })();
+
+  /* "Add to Home Screen" banner: iPhone Safari, direct visits only.
+     Never shows when embedded in another site, when already launched from the
+     home screen (standalone), in non-Safari iOS browsers, or after dismissal. */
+  (function(){
+    var KEY="edmap.a2hs.dismissed.v1";
+    var el=document.getElementById("a2hs");
+    if(!el) return;
+    if(isEmbedded()) return;                                     /* inside the Google Sites iframe */
+    if(window.navigator.standalone===true) return;               /* already installed */
+    if(STORE.get(KEY)==="1") return;                             /* previously dismissed */
+    var ua=navigator.userAgent||"";
+    var isIphone=/iPhone/.test(ua) && !window.MSStream;
+    var isSafari=/Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/.test(ua);
+    if(!(isIphone && isSafari)) return;
+    setTimeout(function(){
+      el.classList.add("show");
+      el.setAttribute("aria-hidden","false");
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add("in"); }); });
+    }, 1400);
+    document.getElementById("a2hsClose").addEventListener("click", function(){
+      el.classList.remove("in");
+      setTimeout(function(){ el.classList.remove("show"); el.setAttribute("aria-hidden","true"); }, 320);
+      STORE.set(KEY,"1");
+    });
   })();
 
   mountFirst();
