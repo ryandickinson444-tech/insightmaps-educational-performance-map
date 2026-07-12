@@ -282,6 +282,27 @@
   #edmap .afoot .brand{display:inline-flex; align-items:center; gap:6px; color:var(--brand-word); font-weight:650}
   #edmap .afoot .brand svg{width:13px; height:15px}
 
+  /* Desktop fit-to-screen: on wide screens, scale boxes + text ~12% to use the space
+     and cut deadspace. Real dimensions are scaled (not transform) so connectors stay aligned.
+     Gated on min-width so phones/tablets are completely unaffected. */
+  @media (min-width:1100px){
+    #edmap .anc{width:min(448px,86vw); padding:10px 44px 10px 16px}
+    #edmap .anc .nt{font-size:15px}
+    #edmap .focus{width:min(492px,86%); padding:22px 25px}
+    #edmap .focus .nt{font-size:clamp(22px,3.4vw,30px)}
+    #edmap .focus .fdesc{font-size:15.5px; margin-top:10px}
+    #edmap .child{width:230px; min-height:108px; padding:17px 17px 15px; gap:8px}
+    #edmap .child .nt{font-size:17px}
+    #edmap .child .eyebrow{font-size:11px}
+    #edmap .child .cnt{font-size:12.5px}
+    #edmap .child .go{width:22px; height:22px}
+    #edmap .below{gap:18px}
+    #edmap .alist{width:min(648px,94%)}
+    #edmap .action p{font-size:15.5px}
+    #edmap .action .tick{width:19px; height:19px}
+    #edmap .ph{width:min(624px,94%); font-size:15px}
+  }
+
   @media (max-width:560px){
     #edmap .top{padding:10px 14px}
     #edmap .ttl span{display:none}
