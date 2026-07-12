@@ -136,7 +136,7 @@
   #edmap .spine{display:flex; flex-direction:column; align-items:center; gap:22px; max-width:100%}
   #edmap .scene.anim{transition:transform var(--dur) var(--ease), opacity calc(var(--dur) * .9) ease}
   #edmap .links{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible}
-  #edmap .links path{fill:none; stroke:var(--line); stroke-width:1.5; stroke-linecap:butt; stroke-linejoin:miter}
+  #edmap .links path{fill:none; stroke:var(--line); stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round}
 
   /* Ancestor pathway boxes */
   #edmap .anc{position:relative; z-index:2; width:min(400px,86vw); padding:9px 40px 9px 14px; border-radius:8px; text-align:left; font:inherit; border:0; cursor:pointer; box-shadow:0 1px 2px rgba(26,28,30,.08); transition:transform .14s ease, box-shadow .14s ease, filter .14s ease}
@@ -206,7 +206,7 @@
   #edmap .arows::-webkit-scrollbar-thumb{background:#D5D8DC; border-radius:8px}
   #edmap .action{position:relative; display:flex; align-items:flex-start; gap:12px; padding:12px 16px 12px 18px; color:var(--ink); border-left:5px solid var(--cat); transition:opacity .25s ease, background .2s ease}
   #edmap .action + .action{border-top:1px solid #F0F1F3}
-  #edmap .action .tick{flex:0 0 auto; width:17px; height:17px; margin-top:1px; border-radius:5px; border:2px solid var(--cat); opacity:.65}
+  #edmap .action .tick{flex:0 0 auto; width:17px; height:17px; margin-top:1px; border-radius:5px; background:var(--cat); border:1px solid rgba(0,0,0,.14); box-shadow:inset 0 1px 1px rgba(255,255,255,.28)}
   #edmap .action p{font-size:14px; line-height:1.42; padding-right:26px; transition:font-size .25s ease}
   #edmap .action.dim{opacity:.5; filter:grayscale(1)}
   #edmap .action.dim{padding-top:7px; padding-bottom:7px}
@@ -793,11 +793,37 @@
     /* vertical spine through the chosen pathway */
     var chain=[].slice.call(scene.querySelectorAll(".anc")); chain.push(focus);
     for(var s=0;s<chain.length-1;s++){ var a=rel(chain[s]), b=rel(chain[s+1]); seg("M "+a.cx+" "+(a.y+a.h)+" L "+b.cx+" "+b.y); }
-    /* elbows from focus down to the current layer */
+    /* connectors from focus down to the current layer, drawn as a shared bus so the
+       split reads as a clean intersection (not a peak): one stem down from the parent,
+       one horizontal bus, a drop to each child. Only the outer corners are rounded. */
     var f=rel(focus), fx=f.cx, fy=f.y+f.h;
     var t=scene.querySelectorAll(".child"); if(!t.length){ var L=scene.querySelector(".alist, .ph"); if(L) t=[L]; }
-    for(var i=0;i<t.length;i++){ var c=rel(t[i]), cx=c.cx, cy=c.y, m=(fy+cy)/2; seg((Math.abs(cx-fx)<1) ? ("M "+fx+" "+fy+" L "+fx+" "+cy) : ("M "+fx+" "+fy+" L "+fx+" "+m+" L "+cx+" "+m+" L "+cx+" "+cy)); }
+    if(t.length){
+      var kids=[]; for(var i=0;i<t.length;i++){ var c=rel(t[i]); kids.push({cx:c.cx, cy:c.y}); }
+      var cyTop=kids[0].cy; for(var k=0;k<kids.length;k++){ if(kids[k].cy<cyTop) cyTop=kids[k].cy; }
+      var m=(fy+cyTop)/2;
+      if(kids.length===1 && Math.abs(kids[0].cx-fx)<1){
+        seg("M "+fx+" "+fy+" L "+fx+" "+kids[0].cy);
+      } else {
+        var xmin=fx, xmax=fx;
+        for(var k2=0;k2<kids.length;k2++){ if(kids[k2].cx<xmin) xmin=kids[k2].cx; if(kids[k2].cx>xmax) xmax=kids[k2].cx; }
+        var r=Math.max(4, Math.min(14, (m-fy), (cyTop-m)));
+        /* parent stem down to the bus */
+        seg("M "+fx+" "+fy+" L "+fx+" "+m);
+        /* left arm: bus from center out to the leftmost child, rounding down into it */
+        if(xmin < fx-0.5){ var rL=Math.min(r, fx-xmin);
+          seg("M "+fx+" "+m+" L "+(xmin+rL)+" "+m+" Q "+xmin+" "+m+" "+xmin+" "+(m+rL)+" L "+xmin+" "+childCyAt(kids,xmin)); }
+        /* right arm: bus from center out to the rightmost child, rounding down into it */
+        if(xmax > fx+0.5){ var rR=Math.min(r, xmax-fx);
+          seg("M "+fx+" "+m+" L "+(xmax-rR)+" "+m+" Q "+xmax+" "+m+" "+xmax+" "+(m+rR)+" L "+xmax+" "+childCyAt(kids,xmax)); }
+        /* interior + center children: straight drop off the bus (clean T / 4-way) */
+        for(var k3=0;k3<kids.length;k3++){ var kx=kids[k3].cx;
+          if(kx>xmin+0.5 && kx<xmax-0.5) seg("M "+kx+" "+m+" L "+kx+" "+kids[k3].cy);
+          else if(Math.abs(kx-fx)<0.5) seg("M "+fx+" "+m+" L "+fx+" "+kids[k3].cy); }
+      }
+    }
   }
+  function childCyAt(kids, x){ for(var i=0;i<kids.length;i++){ if(Math.abs(kids[i].cx-x)<0.5) return kids[i].cy; } return kids[0].cy; }
 
   function mountFirst(){ var sc=buildScene(state.path); stage.appendChild(sc); drawLinks(sc); scrollToFocus(sc); state.scene=sc; updateChrome(); }
 
