@@ -301,6 +301,38 @@
     #edmap .action p{font-size:15.5px}
     #edmap .action .tick{width:19px; height:19px}
     #edmap .ph{width:min(624px,94%); font-size:15px}
+
+    /* Deep view (desktop only): tree columns with the deepest layer stacked */
+    #edmap .scene:has(.below.deep){overflow-x:auto}
+    #edmap .scol:has(.below.deep){max-width:none}
+    #edmap .below.deep{flex-wrap:nowrap; align-items:flex-start; justify-content:center; gap:34px; max-width:none}
+    #edmap .dsub{display:flex; flex-direction:column; align-items:center; gap:26px}
+    #edmap .drow{display:flex; align-items:flex-start; justify-content:center; gap:16px}
+    #edmap .dsub2{display:flex; flex-direction:column; align-items:center}
+    #edmap .dstack{display:flex; flex-direction:column; align-items:stretch; gap:7px; margin-top:16px; width:172px}
+    #edmap .below.deep .child.c1{width:216px}
+    #edmap .below.deep .child.c1 .nt{font-size:16px}
+    #edmap .child.c2{width:172px; min-height:86px; padding:12px 13px 11px; gap:5px}
+    #edmap .child.c2 .nt{font-size:13.5px}
+    #edmap .child.c2 .eyebrow{font-size:9px}
+    #edmap .child.c2 .cnt{font-size:10.5px}
+    #edmap .child.c2 .go{width:17px; height:17px}
+    #edmap .child.leaf{width:172px; min-height:0; padding:9px 12px 8px; gap:3px}
+    #edmap .child.leaf .nt{font-size:12px; line-height:1.22}
+    #edmap .child.leaf .eyebrow{font-size:8px; letter-spacing:.12em}
+    #edmap .child.leaf:hover{transform:translateY(-2px)}
+  }
+  /* Narrower desktops: shrink deep-view boxes so the full tree still fits */
+  @media (min-width:1100px) and (max-width:1420px){
+    #edmap .below.deep{gap:22px}
+    #edmap .drow{gap:12px}
+    #edmap .below.deep .child.c1{width:188px}
+    #edmap .below.deep .child.c1 .nt{font-size:14.5px}
+    #edmap .child.c2{width:150px}
+    #edmap .child.c2 .nt{font-size:12.5px}
+    #edmap .child.leaf{width:150px}
+    #edmap .child.leaf .nt{font-size:11px}
+    #edmap .dstack{width:150px}
   }
 
   @media (max-width:560px){
@@ -785,21 +817,67 @@
         scol.appendChild(ph);
       }
     } else if(kids.length){
-      var below=document.createElement("div"); below.className="below";
-      kids.forEach(function(c,i){
-        var cid=path.concat(i).join(".");
-        var b=document.createElement("button"); b.className="node child k-"+c.k; b.setAttribute("data-idx",i);
-        if(tags[cid]) b.setAttribute("data-tag",tags[cid]);
-        b.innerHTML=tagMarkup(cid)+'<span class="eyebrow">'+esc(LABEL[c.k])+'</span><span class="nt">'+esc(c.t)+'</span><span class="foot"><span class="cnt">'+esc(childCount(c))+'</span>'+GO+'</span>';
-        below.appendChild(b);
-      });
+      /* deep desktop view: focus + up to 3 layers below, actions never shown here.
+         apex: pillars > areas > categories(stacked)
+         pillar: areas > categories > drivers(stacked)
+         area: categories > drivers(stacked)
+         category/driver scenes are unchanged. */
+      var deep = isDeep() && (node.k==="apex"||node.k==="pillar"||node.k==="area");
+      function mkBox(c,p,lvl,idx){
+        var id=p.join("."), b=document.createElement("button");
+        b.className="node child "+lvl+" k-"+c.k;
+        b.setAttribute("data-jpath", p.join(","));
+        b.setAttribute("data-jpathid", id);
+        if(idx!==undefined) b.setAttribute("data-idx", idx);
+        if(tags[id]) b.setAttribute("data-tag",tags[id]);
+        var foot = (lvl==="leaf") ? "" : '<span class="foot"><span class="cnt">'+esc(childCount(c))+'</span>'+GO+'</span>';
+        b.innerHTML=tagMarkup(id)+'<span class="eyebrow">'+esc(LABEL[c.k])+'</span><span class="nt">'+esc(c.t)+'</span>'+foot;
+        return b;
+      }
+      function mkStack(list,pp){
+        var st=document.createElement("div"); st.className="dstack";
+        list.forEach(function(g,j){ st.appendChild(mkBox(g, pp.concat(j), "leaf")); });
+        return st;
+      }
+      var below=document.createElement("div"); below.className="below"+(deep?" deep":"");
+      if(!deep){
+        kids.forEach(function(c,i){
+          var cid=path.concat(i).join(".");
+          var b=document.createElement("button"); b.className="node child k-"+c.k; b.setAttribute("data-idx",i);
+          if(tags[cid]) b.setAttribute("data-tag",tags[cid]);
+          b.innerHTML=tagMarkup(cid)+'<span class="eyebrow">'+esc(LABEL[c.k])+'</span><span class="nt">'+esc(c.t)+'</span><span class="foot"><span class="cnt">'+esc(childCount(c))+'</span>'+GO+'</span>';
+          below.appendChild(b);
+        });
+      } else {
+        kids.forEach(function(c,i){
+          var sub=document.createElement("div"); sub.className="dsub";
+          sub.appendChild(mkBox(c, path.concat(i), "c1", i));
+          var gk=c.kids||[];
+          if(node.k==="area"){
+            if(gk.length) sub.appendChild(mkStack(gk, path.concat(i)));
+          } else {
+            var drow=document.createElement("div"); drow.className="drow";
+            gk.forEach(function(g,j){
+              var s2=document.createElement("div"); s2.className="dsub2";
+              s2.appendChild(mkBox(g, path.concat(i,j), "c2"));
+              var hk=g.kids||[];
+              if(hk.length && hk[0].k!=="action") s2.appendChild(mkStack(hk, path.concat(i,j)));
+              drow.appendChild(s2);
+            });
+            sub.appendChild(drow);
+          }
+          below.appendChild(sub);
+        });
+      }
       scol.appendChild(below);
     }
     return scene;
   }
+  function isDeep(){ return window.innerWidth>=1100; }
 
   function localRect(el){ var s=stage.getBoundingClientRect(), r=el.getBoundingClientRect(); return {w:r.width,cx:r.left-s.left+r.width/2,cy:r.top-s.top+r.height/2}; }
   function scrollToFocus(scene){
+    if(scene.querySelector(".below.deep")){ scene.scrollTop=0; return; }
     var f=scene.querySelector(".alist")||scene.querySelector(".below")||scene.querySelector(".ph")||scene.querySelector(".focus"); if(!f) return;
     var fb=f.getBoundingClientRect(), sb=scene.getBoundingClientRect();
     var target=scene.scrollTop + (fb.bottom - sb.bottom) + 18;
@@ -817,10 +895,8 @@
     /* connectors from focus down to the current layer, drawn as a shared bus so the
        split reads as a clean intersection (not a peak): one stem down from the parent,
        one horizontal bus, a drop to each child. Only the outer corners are rounded. */
-    var f=rel(focus), fx=f.cx, fy=f.y+f.h;
-    var t=scene.querySelectorAll(".child"); if(!t.length){ var L=scene.querySelector(".alist, .ph"); if(L) t=[L]; }
-    if(t.length){
-      var kids=[]; for(var i=0;i<t.length;i++){ var c=rel(t[i]); kids.push({cx:c.cx, cy:c.y}); }
+    function drawBus(fx, fy, kids){
+      if(!kids.length) return;
       var cyTop=kids[0].cy; for(var k=0;k<kids.length;k++){ if(kids[k].cy<cyTop) cyTop=kids[k].cy; }
       var m=(fy+cyTop)/2;
       if(kids.length===1 && Math.abs(kids[0].cx-fx)<1){
@@ -843,6 +919,27 @@
           else if(Math.abs(kx-fx)<0.5) seg("M "+fx+" "+m+" L "+fx+" "+kids[k3].cy); }
       }
     }
+    function rects(list){ var out=[]; for(var i=0;i<list.length;i++){ var c=rel(list[i]); out.push({cx:c.cx, cy:c.y}); } return out; }
+    var f=rel(focus), fx=f.cx, fy=f.y+f.h;
+    var deepEl=scene.querySelector(".below.deep");
+    var t = deepEl ? deepEl.querySelectorAll(":scope > .dsub > .child.c1") : scene.querySelectorAll(".child");
+    if(!t.length){ var L=scene.querySelector(".alist, .ph"); if(L) t=[L]; }
+    if(t.length) drawBus(fx, fy, rects([].slice.call(t)));
+    /* deep view: a bus inside each level-1 column, and a stem into each stacked group */
+    if(deepEl){
+      var subs=deepEl.querySelectorAll(":scope > .dsub");
+      for(var si=0; si<subs.length; si++){
+        var pBox=subs[si].querySelector(":scope > .child.c1"); if(!pBox) continue;
+        var row=subs[si].querySelectorAll(":scope > .drow > .dsub2 > .child.c2");
+        if(row.length){ var pr=rel(pBox); drawBus(pr.cx, pr.y+pr.h, rects([].slice.call(row))); }
+      }
+      var stacks=deepEl.querySelectorAll(".dstack");
+      for(var st=0; st<stacks.length; st++){
+        var par=stacks[st].parentElement.querySelector(":scope > .child"); if(!par) continue;
+        var pp=rel(par), ss=rel(stacks[st].firstElementChild);
+        seg("M "+pp.cx+" "+(pp.y+pp.h)+" L "+pp.cx+" "+ss.y);
+      }
+    }
   }
   function childCyAt(kids, x){ for(var i=0;i<kids.length;i++){ if(Math.abs(kids[i].cx-x)<0.5) return kids[i].cy; } return kids[0].cy; }
 
@@ -859,7 +956,7 @@
     var A,B;
     if(mode==="in"){ A=localRect(oldScene.querySelector('.child[data-idx="'+childIdx+'"]')); B=localRect(newScene.querySelector('.focus')); }
     else { /* out or jump: the destination is already visible in the old pathway - fly from it */
-      var src=oldScene.querySelector('.anc[data-pathid="'+idOf(target)+'"]');
+      var src=oldScene.querySelector('.anc[data-pathid="'+idOf(target)+'"]') || oldScene.querySelector('.child[data-jpathid="'+idOf(target)+'"]');
       A=localRect(src || oldScene.querySelector('.focus'));
       B=localRect(newScene.querySelector('.focus'));
     }
@@ -920,7 +1017,7 @@
     var chip=e.target.closest(".chip"); if(chip){ toggleChip(chip.dataset.cat); return; }
     if(e.target.closest(".alist")) return;
     var anc=e.target.closest(".anc"); if(anc){ var ap=anc.dataset.path ? anc.dataset.path.split(",").map(Number) : []; goToPath(ap); return; }
-    var child=e.target.closest(".child"); if(child){ zoomInChild(parseInt(child.dataset.idx,10)); return; }
+    var child=e.target.closest(".child"); if(child){ if(child.dataset.idx!==undefined){ zoomInChild(parseInt(child.dataset.idx,10)); return; } if(child.dataset.jpath){ goToPath(child.dataset.jpath.split(",").map(Number)); return; } return; }
     if(e.target.closest(".focus")){ zoomOut(); return; }
     zoomOut();
   });
